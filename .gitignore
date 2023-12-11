@@ -1,4 +1,2 @@
-images/
+image/
 *.npy
-depth/
-color/

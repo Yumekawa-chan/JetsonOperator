@@ -12,8 +12,8 @@ imgpoints2 = []
 objp = np.zeros((checkerboard_size[0] * checkerboard_size[1], 3), np.float32)
 objp[:, :2] = np.mgrid[0:checkerboard_size[0], 0:checkerboard_size[1]].T.reshape(-1, 2) * square_size
 
-images1 = glob.glob('images/*_1.png')
-images2 = glob.glob('images/*_2.png')
+images1 = glob.glob('image/calib_*_1.png')
+images2 = glob.glob('image/calib_*_2.png')
 
 for img1, img2 in zip(images1, images2):
     img1 = cv2.imread(img1)
