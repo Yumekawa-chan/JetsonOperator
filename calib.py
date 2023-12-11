@@ -3,7 +3,7 @@ import numpy as np
 import glob
 
 checkerboard_size = (7, 10) 
-square_size = 1.0  
+square_size = 4.75  
 
 objpoints = [] 
 imgpoints1 = [] 
