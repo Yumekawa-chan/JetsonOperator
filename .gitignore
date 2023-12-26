@@ -1,2 +1,4 @@
 image/
 *.npy
+*.npz
+*.pdf
