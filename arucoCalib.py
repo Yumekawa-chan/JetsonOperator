@@ -41,6 +41,10 @@ def load_camera_parameters(filepath):
         dist_coeff = np.append(intrinsics[4:], [0])
     return camera_matrix, dist_coeff
 
+def save_rt_matrices(R, T):
+    np.save(f'matrix/R.npy', R)
+    np.save(f'matrix/T.npy', T)
+
 camera_matrix_1, dist_coeff_1 = load_camera_parameters('matrix/color_intrinsics_1.npy')
 camera_matrix_2, dist_coeff_2 = load_camera_parameters('matrix/color_intrinsics_2.npy')
 
