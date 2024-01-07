@@ -71,6 +71,8 @@ for image1_path, image2_path in zip(image1_paths, image2_paths):
             print(f"マーカー {id} のカメラ1からカメラ2への相対的なR: \n{R}")
             print(f"マーカー {id} のカメラ1からカメラ2への相対的なT: \n{T}")
 
+            save_rt_matrices(R, T)
+
         cv2.imshow("Image 1", image1)
         cv2.imshow("Image 2", image2)
         cv2.waitKey(0)

@@ -68,12 +68,11 @@ def process_outliers(pcd_r, pcd_l):
     pcd_l_processed = remove_outliers(pcd_l)
     return pcd_r_processed, pcd_l_processed
 
-# Read PointCloud information
-depth_intrinsics_1 = np.load('depth_intrinsics_1.npy')
+depth_intrinsics_1 = np.load('matrix/depth_intrinsics_1.npy')
 depth_image_path_1 = 'image/depth_20240106_102852_1.png'
 color_image_path_1 = 'image/color_20240106_102852_1.png'
 
-depth_intrinsics_2 = np.load('depth_intrinsics_2.npy')
+depth_intrinsics_2 = np.load('matrix/depth_intrinsics_2.npy')
 depth_image_path_2 = 'image/depth_20240106_102852_2.png'
 color_image_path_2 = 'image/color_20240106_102852_2.png'
 
@@ -81,12 +80,11 @@ pcd_1 = create_point_cloud(depth_image_path_1, color_image_path_1, depth_intrins
 pcd_2 = create_point_cloud(depth_image_path_2, color_image_path_2, depth_intrinsics_2)
 
 
-R = np.load('R_matrix.npy')
-T = np.load('T_vector.npy')
+R = np.load('matrix/R.npy')
+T = np.load('matrix/T.npy')
 
 transformation_matrix = get_transformation_matrix(R, T)
 
-# 点群に適用
 pcd_2.transform(transformation_matrix)
 
 pcd_1,pcd_2 = execute_icp(pcd_1,pcd_2)
