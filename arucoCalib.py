@@ -1,57 +1,55 @@
 import cv2
 import cv2.aruco as aruco
 import numpy as np
-import glob
 
-def detect_aruco_markers(image, aruco_dict_type=aruco.DICT_6X6_250, marker_size=0.05, camera_matrix=None, dist_coeffs=None):
+def find_aruco_markers(image, marker_size=6, total_markers=250, draw=True):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    aruco_dict = aruco.Dictionary_get(aruco_dict_type)
+    key = getattr(aruco, f'DICT_{marker_size}X{marker_size}_{total_markers}')
+    aruco_dict = aruco.Dictionary_get(key)
     aruco_params = aruco.DetectorParameters_create()
-    corners, ids, rejected = aruco.detectMarkers(gray, aruco_dict, parameters=aruco_params, cameraMatrix=camera_matrix, distCoeff=dist_coeffs)
+    corners, ids, rejected = aruco.detectMarkers(gray, aruco_dict, parameters=aruco_params)
     
-    if len(corners) > 0:
-        rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, marker_size, camera_matrix, dist_coeffs)
-        for i in range(len(ids)):
-            image = aruco.drawAxis(image, camera_matrix, dist_coeffs, rvecs[i], tvecs[i], 0.1)
+    if draw:
         aruco.drawDetectedMarkers(image, corners, ids)
-    return image, corners, ids, rvecs, tvecs
 
-def get_transformation_matrix(rvec, tvec):
-    R, _ = cv2.Rodrigues(rvec)
-    T = np.array(tvec).reshape(3, 1)
-    transformation_matrix = np.concatenate((R, T), axis=1)
-    transformation_matrix = np.vstack((transformation_matrix, [0, 0, 0, 1]))
-    return transformation_matrix
+    return corners, ids
 
-# カメラの内部パラメータ（キャリブレーションから取得）
-camera_matrix = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])  # ここに実際の値を設定
-dist_coeffs = np.array([k1, k2, p1, p2, k3])  # ここに実際の値を設定
+def estimate_pose(image, corners, ids, camera_matrix, dist_coeff):
+    rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeff)
+    for rvec, tvec in zip(rvecs, tvecs):
+        aruco.drawAxis(image, camera_matrix, dist_coeff, rvec, tvec, 0.03)
+    return rvecs, tvecs
 
-# 画像の読み込みとArUcoマーカーの検出
-filepaths1 = glob.glob('path/to/timestamp_1_*.png')  # 画像のパスを正しく設定
-filepaths2 = glob.glob('path/to/timestamp_2_*.png')  # 画像のパスを正しく設定
+def relative_camera_pose(rvec1, tvec1, rvec2, tvec2):
+    R1, _ = cv2.Rodrigues(rvec1)
+    R2, _ = cv2.Rodrigues(rvec2)
+    R_rel = np.dot(R2, R1.T)
+    t_rel = tvec2 - np.dot(R_rel, tvec1)
+    return R_rel, t_rel
 
-for filepath1, filepath2 in zip(filepaths1, filepaths2):
-    image1 = cv2.imread(filepath1)
-    image2 = cv2.imread(filepath2)
+# カメラ内部パラメータ（これらはあなたのカメラに合わせて設定する必要があります）
+camera_matrix = np.array([[800, 0, 320],
+                          [0, 800, 240],
+                          [0, 0, 1]])
+dist_coeff = np.zeros(4)
 
-    # それぞれのカメラでArUcoマーカーを検出
-    image_with_markers1, corners1, ids1, rvecs1, tvecs1 = detect_aruco_markers(image1, camera_matrix=camera_matrix, dist_coeffs=dist_coeffs)
-    image_with_markers2, corners2, ids2, rvecs2, tvecs2 = detect_aruco_markers(image2, camera_matrix=camera_matrix, dist_coeffs=dist_coeffs)
+# 画像を読み込む
+image1 = cv2.imread('path_to_image1.jpg')
+image2 = cv2.imread('path_to_image2.jpg')
 
-    if len(rvecs1) > 0 and len(rvecs2) > 0:
-        # 最初のマーカーの姿勢を変換行列に変換
-        transformation_matrix1 = get_transformation_matrix(rvecs1[0], tvecs1[0])
-        transformation_matrix2 = get_transformation_matrix(rvecs2[0], tvecs2[0])
+# マーカーを検出し、ポーズを推定する
+corners1, ids1 = find_aruco_markers(image1)
+corners2, ids2 = find_aruco_markers(image2)
+rvecs1, tvecs1 = estimate_pose(image1, corners1, ids1, camera_matrix, dist_coeff)
+rvecs2, tvecs2 = estimate_pose(image2, corners2, ids2, camera_matrix, dist_coeff)
 
-        print("Transformation Matrix for Camera 1:")
-        print(transformation_matrix1)
-        print("\nTransformation Matrix for Camera 2:")
-        print(transformation_matrix2)
+# 共通マーカーのIDを見つける
+common_ids = np.intersect1d(ids1.flatten(), ids2.flatten())
 
-    # 結果の表示（オプション）
-    cv2.imshow('Camera 1 ArUco Markers', image_with_markers1)
-    cv2.imshow('Camera 2 ArUco Markers', image_with_markers2)
-    cv2.waitKey(0)
-
-cv2.destroyAllWindows()
+# RとTの行列を計算する
+for id in common_ids:
+    idx1 = np.where(ids1 == id)[0][0]
+    idx2 = np.where(ids2 == id)[0][0]
+    R, T = relative_camera_pose(rvecs1[idx1], tvecs1[idx1][0], rvecs2[idx2], tvecs2[idx2][0])
+    print(f"マーカー {id} のカメラ1からカメラ2への相対的なR: \n{R}")
+    print(f"マーカー {id} のカメラ1からカメラ2への相対的なT: \n{T}")

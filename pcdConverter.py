@@ -70,28 +70,26 @@ def process_outliers(pcd_r, pcd_l):
 
 # Read PointCloud information
 depth_intrinsics_1 = np.load('depth_intrinsics_1.npy')
-depth_image_path_1 = 'image/depth_20231218_085056_1.png'
-color_image_path_1 = 'image/color_20231218_085056_1.png'
+depth_image_path_1 = 'image/depth_20240106_102852_1.png'
+color_image_path_1 = 'image/color_20240106_102852_1.png'
 
 depth_intrinsics_2 = np.load('depth_intrinsics_2.npy')
-depth_image_path_2 = 'image/depth_20231218_085056_2.png'
-color_image_path_2 = 'image/color_20231218_085056_2.png'
+depth_image_path_2 = 'image/depth_20240106_102852_2.png'
+color_image_path_2 = 'image/color_20240106_102852_2.png'
 
 pcd_1 = create_point_cloud(depth_image_path_1, color_image_path_1, depth_intrinsics_1)
 pcd_2 = create_point_cloud(depth_image_path_2, color_image_path_2, depth_intrinsics_2)
 
 
-data = np.load('calibration_data.npz', allow_pickle=True)
-R = data['R']
-T = data['T']
+R = np.load('R_matrix.npy')
+T = np.load('T_vector.npy')
 
-transformation_matrix = get_transformation_matrix(R,T)
+transformation_matrix = get_transformation_matrix(R, T)
 
-# Process Point Cloud
-pcd_1,pcd_2 = process_outliers(pcd_1,pcd_2)
+# 点群に適用
+pcd_2.transform(transformation_matrix)
 
-pcd_1.transform(transformation_matrix)
-# pcd_1,pcd_2 = execute_icp(pcd_1,pcd_2)
+pcd_1,pcd_2 = execute_icp(pcd_1,pcd_2)
 
 o3d.visualization.draw_geometries([pcd_1]+[pcd_2])
 
