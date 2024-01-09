@@ -17,9 +17,9 @@ def find_aruco_markers(image, marker_size=6, total_markers=250, draw=True):
 
 def estimate_pose(image, corners, ids, camera_matrix, dist_coeff):
     if corners and len(corners) > 0 and ids is not None and len(ids) > 0:
-        rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeff)
+        rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, 0.26, camera_matrix, dist_coeff)
         for rvec, tvec in zip(rvecs, tvecs):
-            cv2.drawFrameAxes(image, camera_matrix, dist_coeff, rvec, tvec, 0.03)
+            cv2.drawFrameAxes(image, camera_matrix, dist_coeff, rvec, tvec, 0.04)
         return rvecs, tvecs
     return None, None
 

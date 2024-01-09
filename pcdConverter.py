@@ -69,12 +69,12 @@ def process_outliers(pcd_r, pcd_l):
     return pcd_r_processed, pcd_l_processed
 
 depth_intrinsics_1 = np.load('matrix/depth_intrinsics_1.npy')
-depth_image_path_1 = 'image/depth_20240106_102852_1.png'
-color_image_path_1 = 'image/color_20240106_102852_1.png'
+depth_image_path_1 = 'image/depth_20240109_065859_1.png'
+color_image_path_1 = 'image/color_20240109_065859_1.png'
 
 depth_intrinsics_2 = np.load('matrix/depth_intrinsics_2.npy')
-depth_image_path_2 = 'image/depth_20240106_102852_2.png'
-color_image_path_2 = 'image/color_20240106_102852_2.png'
+depth_image_path_2 = 'image/depth_20240109_065859_2.png'
+color_image_path_2 = 'image/color_20240109_065859_2.png'
 
 pcd_1 = create_point_cloud(depth_image_path_1, color_image_path_1, depth_intrinsics_1)
 pcd_2 = create_point_cloud(depth_image_path_2, color_image_path_2, depth_intrinsics_2)
@@ -82,6 +82,12 @@ pcd_2 = create_point_cloud(depth_image_path_2, color_image_path_2, depth_intrins
 
 R = np.load('matrix/R.npy')
 T = np.load('matrix/T.npy')
+
+mtx = [[1,0,0],
+       [0,1,0],
+       [0,0,1]]
+
+R = R @ mtx
 
 transformation_matrix = get_transformation_matrix(R, T)
 
