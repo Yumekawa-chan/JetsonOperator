@@ -4,7 +4,7 @@ from glob import glob
 
 # Checkerboard configuration
 CHECKERBOARD = (4, 7)  # チェッカーボードの内側の角の数
-square_size = 0.1     # チェッカーボードの各正方形のサイズ（単位：センチメートル）
+square_size = 10     # チェッカーボードの各正方形のサイズ（単位：センチメートル）
 
 # Calibration criteria
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -32,13 +32,13 @@ def save_rt_matrices(R, T):
     np.save(f'matrix/R.npy', R)
     np.save(f'matrix/T.npy', T)
 
-mtx1, dist1 = load_camera_parameters('matrix/color_intrinsics_1.npy')
-mtx2, dist2 = load_camera_parameters('matrix/color_intrinsics_2.npy')
+mtx1, dist1 = load_camera_parameters('matrix/color_intrinsics_2.npy')
+mtx2, dist2 = load_camera_parameters('matrix/color_intrinsics_1.npy')
 
 # Image file paths
 image_folder = 'image/'
-image_files1 = sorted(glob(image_folder + 'color_*_1.png'))
-image_files2 = sorted(glob(image_folder + 'color_*_2.png'))
+image_files1 = sorted(glob(image_folder + 'color_*_2.png'))
+image_files2 = sorted(glob(image_folder + 'color_*_1.png'))
 
 # Iterate over pairs of images
 for img_file1, img_file2 in zip(image_files1, image_files2):
@@ -63,6 +63,7 @@ ret, _, _, _, _, R, T, E, F = cv2.stereoCalibrate(
     objpoints, imgpoints1, imgpoints2, mtx1, dist1, mtx2, dist2, gray1.shape[::-1], 
     criteria=criteria, flags=cv2.CALIB_FIX_INTRINSIC
 )
+
 
 print("Stereo Calibration successful:", ret)
 print("Rotation Matrix:\n", R)
