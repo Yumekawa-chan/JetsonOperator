@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import open3d as o3d
+from glob import glob
 
 def create_point_cloud(depth_image_path, color_image_path, intrinsics):
     depth_image = cv2.imread(depth_image_path, cv2.IMREAD_UNCHANGED)
@@ -26,11 +27,11 @@ def create_point_cloud(depth_image_path, color_image_path, intrinsics):
     return pcd
 
 def get_transformation_matrix(R, T):
-    rotation = R
-    translation = (T*(-0.01)).squeeze()
+    
     transformation_matrix = np.eye(4)
-    transformation_matrix[:3, :3] = rotation
-    transformation_matrix[:3, 3] = translation
+    transformation_matrix[:3, :3] = R
+    transformation_matrix[:3, 3] = T.T
+    
     return transformation_matrix
 
 
@@ -69,12 +70,12 @@ def process_outliers(pcd_r, pcd_l):
     return pcd_r_processed, pcd_l_processed
 
 depth_intrinsics_1 = np.load('matrix/depth_intrinsics_1.npy')
-depth_image_path_1 = 'image/depth_20240109_065859_1.png'
-color_image_path_1 = 'image/color_20240109_065859_1.png'
+depth_image_path_1 = glob('image/depth_*_1.png')[0]
+color_image_path_1 = glob('image/color_*_1.png')[0]
 
 depth_intrinsics_2 = np.load('matrix/depth_intrinsics_2.npy')
-depth_image_path_2 = 'image/depth_20240109_065859_2.png'
-color_image_path_2 = 'image/color_20240109_065859_2.png'
+depth_image_path_2 = glob('image/depth_*_2.png')[0]
+color_image_path_2 = glob('image/color_*_2.png')[0]
 
 pcd_1 = create_point_cloud(depth_image_path_1, color_image_path_1, depth_intrinsics_1)
 pcd_2 = create_point_cloud(depth_image_path_2, color_image_path_2, depth_intrinsics_2)
@@ -83,15 +84,11 @@ pcd_2 = create_point_cloud(depth_image_path_2, color_image_path_2, depth_intrins
 R = np.load('matrix/R.npy')
 T = np.load('matrix/T.npy')
 
-mtx = [[1,0,0],
-       [0,1,0],
-       [0,0,1]]
-
-R = R @ mtx
-
 transformation_matrix = get_transformation_matrix(R, T)
 
-pcd_2.transform(transformation_matrix)
+pcd_1.transform(transformation_matrix)
+
+# pcd_1,pcd_2 = process_outliers(pcd_1,pcd_2)
 
 pcd_1,pcd_2 = execute_icp(pcd_1,pcd_2)
 
