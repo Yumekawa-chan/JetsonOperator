@@ -38,7 +38,7 @@ def find_aruco_markers(image, marker_size=6, total_markers=250, draw=True):
 
 def estimate_pose(image, corners, ids, camera_matrix, dist_coeff):
     if corners and len(corners) > 0 and ids is not None and len(ids) > 0:
-        rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, 0.39, camera_matrix, dist_coeff)
+        rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, 0.39 / 2, camera_matrix, dist_coeff)
         
     return rvecs, tvecs
 
@@ -86,10 +86,10 @@ for image1_path, image2_path in zip(image1_paths, image2_paths):
 
         R_avg, T_avg = average_relative_pose(rvecs1, tvecs1, rvecs2, tvecs2, common_ids, ids1, ids2)
 
-        # cv2.imshow("Image 1", image1)
-        # cv2.imshow("Image 2", image2)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        cv2.imshow("Image 1", image1)
+        cv2.imshow("Image 2", image2)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 print(f"カメラ間の平均相対的なR: \n{R_avg}")
 print(f"カメラ間の平均相対的なT: \n{T_avg}")

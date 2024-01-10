@@ -58,6 +58,8 @@ for img_file1, img_file2 in zip(image_files1, image_files2):
         imgpoints1.append(corners1)
         imgpoints2.append(corners2)
 
+T_initial = np.array([[5, 0, 0]])
+
 # Stereo calibration
 ret, _, _, _, _, R, T, E, F = cv2.stereoCalibrate(
     objpoints, imgpoints1, imgpoints2, mtx1, dist1, mtx2, dist2, gray1.shape[::-1], 

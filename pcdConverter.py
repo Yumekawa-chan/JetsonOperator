@@ -93,7 +93,7 @@ T = np.load('matrix/T.npy')
 
 transformation_matrix = get_transformation_matrix(R, T)
 
-pcd_2.transform(transformation_matrix)
+pcd_1.transform(transformation_matrix)
 
 pcd_1,pcd_2 = process_outliers(pcd_1,pcd_2)
 
