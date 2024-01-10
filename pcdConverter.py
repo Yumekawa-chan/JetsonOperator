@@ -26,11 +26,13 @@ def create_point_cloud(depth_image_path, color_image_path, intrinsics):
 
     return pcd
 
-def get_transformation_matrix(R, T):
+def get_transformation_matrix(R, Tr):
     
     transformation_matrix = np.eye(4)
     transformation_matrix[:3, :3] = R
-    transformation_matrix[:3, 3] = T.T
+    transformation_matrix[:3, 3] = Tr.T
+
+    print("transform_mtx:\n",transformation_matrix)
     
     return transformation_matrix
 
@@ -55,7 +57,7 @@ def execute_icp(source, target):
     source.transform(transformation_icp)
     return source, target
 
-def remove_outliers(pcd, nb_neighbors=50, std_ratio=2.0, radius=0.05, min_nb_points=10):
+def remove_outliers(pcd, nb_neighbors=100, std_ratio=2.0, radius=0.05, min_nb_points=5):
     pcd, ind = pcd.remove_statistical_outlier(
         nb_neighbors=nb_neighbors, std_ratio=std_ratio)
     pcd, ind = pcd.remove_radius_outlier(
@@ -81,16 +83,21 @@ pcd_1 = create_point_cloud(depth_image_path_1, color_image_path_1, depth_intrins
 pcd_2 = create_point_cloud(depth_image_path_2, color_image_path_2, depth_intrinsics_2)
 
 
-R = np.load('matrix/R.npy')
+R = np.load('matrix/R.npy') 
+
+# R =  R @ [[0,0,1],
+#             [0,1,0],
+#             [-1,0,0]]
 T = np.load('matrix/T.npy')
+
 
 transformation_matrix = get_transformation_matrix(R, T)
 
-pcd_1.transform(transformation_matrix)
+pcd_1 = pcd_1.transform(transformation_matrix)
 
-# pcd_1,pcd_2 = process_outliers(pcd_1,pcd_2)
+pcd_1,pcd_2 = process_outliers(pcd_1,pcd_2)
 
-pcd_1,pcd_2 = execute_icp(pcd_1,pcd_2)
+# pcd_1,pcd_2 = execute_icp(pcd_1,pcd_2)
 
 o3d.visualization.draw_geometries([pcd_1]+[pcd_2])
 
