@@ -84,20 +84,15 @@ pcd_2 = create_point_cloud(depth_image_path_2, color_image_path_2, depth_intrins
 
 
 R = np.load('matrix/R.npy') 
-
-# R =  R @ [[0,0,1],
-#             [0,1,0],
-#             [-1,0,0]]
 T = np.load('matrix/T.npy')
-
 
 transformation_matrix = get_transformation_matrix(R, T)
 
 pcd_1.transform(transformation_matrix)
 
-pcd_1,pcd_2 = process_outliers(pcd_1,pcd_2)
+# pcd_1,pcd_2 = process_outliers(pcd_1,pcd_2)
 
-pcd_1,pcd_2 = execute_icp(pcd_1,pcd_2)
+# pcd_1,pcd_2 = execute_icp(pcd_1,pcd_2)
 
 o3d.visualization.draw_geometries([pcd_1]+[pcd_2])
 
