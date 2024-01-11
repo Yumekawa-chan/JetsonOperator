@@ -1,9 +1,13 @@
 import socket
 import threading
+from time import sleep
 
 def send_capture_command():
     while True:
         input("Press Enter to send capture command to all clients: ")
+        for i in range(10):
+            print(10-i)
+            sleep(1)
         for client in clients:
             client.sendall(b'capture')
 

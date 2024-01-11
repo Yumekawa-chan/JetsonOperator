@@ -72,16 +72,15 @@ def process_outliers(pcd_r, pcd_l):
     return pcd_r_processed, pcd_l_processed
 
 depth_intrinsics_1 = np.load('matrix/depth_intrinsics_1.npy')
-depth_image_path_1 = glob('image/depth_*_1.png')[0]
-color_image_path_1 = glob('image/color_*_1.png')[0]
+depth_image_path_1 = sorted(glob('image/depth_*_1.png'))[0]
+color_image_path_1 = sorted(glob('image/color_*_1.png'))[0]
 
 depth_intrinsics_2 = np.load('matrix/depth_intrinsics_2.npy')
-depth_image_path_2 = glob('image/depth_*_2.png')[0]
-color_image_path_2 = glob('image/color_*_2.png')[0]
+depth_image_path_2 = sorted(glob('image/depth_*_2.png'))[0]
+color_image_path_2 = sorted(glob('image/color_*_2.png'))[0]
 
 pcd_1 = create_point_cloud(depth_image_path_1, color_image_path_1, depth_intrinsics_1)
 pcd_2 = create_point_cloud(depth_image_path_2, color_image_path_2, depth_intrinsics_2)
-
 
 R = np.load('matrix/R.npy') 
 T = np.load('matrix/T.npy')
@@ -90,9 +89,9 @@ transformation_matrix = get_transformation_matrix(R, T)
 
 pcd_1.transform(transformation_matrix)
 
-# pcd_1,pcd_2 = process_outliers(pcd_1,pcd_2)
+pcd_1,pcd_2 = process_outliers(pcd_1,pcd_2)
 
-# pcd_1,pcd_2 = execute_icp(pcd_1,pcd_2)
+pcd_1,pcd_2 = execute_icp(pcd_1,pcd_2)
 
 o3d.visualization.draw_geometries([pcd_1]+[pcd_2])
 

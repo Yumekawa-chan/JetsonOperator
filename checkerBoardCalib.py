@@ -4,7 +4,7 @@ from glob import glob
 
 # Checkerboard configuration
 CHECKERBOARD = (4, 7)  # チェッカーボードの内側の角の数
-square_size = 10     # チェッカーボードの各正方形のサイズ（単位：センチメートル）
+square_size = 0.10     # チェッカーボードの各正方形のサイズ（メートル）
 
 # Calibration criteria
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -32,13 +32,15 @@ def save_rt_matrices(R, T):
     np.save(f'matrix/R.npy', R)
     np.save(f'matrix/T.npy', T)
 
-mtx1, dist1 = load_camera_parameters('matrix/color_intrinsics_2.npy')
-mtx2, dist2 = load_camera_parameters('matrix/color_intrinsics_1.npy')
+mtx1 = np.load("matrix/camera_matrix_1.npy")
+dist1 = np.load("matrix/dist_coeffs_1.npy")
+mtx2 = np.load("matrix/camera_matrix_2.npy")
+dist2 = np.load("matrix/dist_coeffs_2.npy")
 
 # Image file paths
 image_folder = 'image/'
-image_files1 = sorted(glob(image_folder + 'color_*_2.png'))
-image_files2 = sorted(glob(image_folder + 'color_*_1.png'))
+image_files1 = sorted(glob(image_folder + 'color_*_1.png'))
+image_files2 = sorted(glob(image_folder + 'color_*_2.png'))
 
 # Iterate over pairs of images
 for img_file1, img_file2 in zip(image_files1, image_files2):
@@ -58,8 +60,6 @@ for img_file1, img_file2 in zip(image_files1, image_files2):
         imgpoints1.append(corners1)
         imgpoints2.append(corners2)
 
-T_initial = np.array([[5, 0, 0]])
-
 # Stereo calibration
 ret, _, _, _, _, R, T, E, F = cv2.stereoCalibrate(
     objpoints, imgpoints1, imgpoints2, mtx1, dist1, mtx2, dist2, gray1.shape[::-1], 
@@ -69,6 +69,6 @@ ret, _, _, _, _, R, T, E, F = cv2.stereoCalibrate(
 
 print("Stereo Calibration successful:", ret)
 print("Rotation Matrix:\n", R)
-print("Translation Vector:\n", T)
+print("Translation Vector:\n", T )
 
 save_rt_matrices(R, T)
