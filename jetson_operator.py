@@ -4,13 +4,11 @@ from time import sleep
 
 def send_capture_command():
     while True:
-        input("Press Enter to send capture command to all clients: ")
-        for i in range(10):
-            print(10-i)
-            sleep(1)
+        input("Press Enter to send capture command to all clients: \n")
+
         for client in clients:
             client.sendall(b'capture')
-
+        sleep(1)
 def accept_clients():
     while True:
         client, addr = server.accept()

@@ -3,6 +3,9 @@ import cv2.aruco as aruco
 import numpy as np
 from glob import glob
 
+id_1 = input("行列を適用するのは？: ")
+id_2 = input("動かさないほうは？: ")
+
 def find_aruco_markers(image, marker_size=6, total_markers=250, draw=True):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     key = getattr(aruco, f'DICT_{marker_size}X{marker_size}_{total_markers}')
@@ -31,21 +34,21 @@ def relative_camera_pose(rvec1, tvec1, rvec2, tvec2):
     return R_rel, t_rel
 
 def save_rt_matrices(R, T):
-    np.save(f'matrix/R.npy', R)
-    np.save(f'matrix/T.npy', T)
+    np.save(f'matrix/R_{id_1}_{id_2}.npy', R)
+    np.save(f'matrix/T_{id_1}_{id_2}.npy', T)
 
-camera_matrix_1 = np.load("matrix/camera_matrix_1.npy")
-dist_coeff_1 = np.load("matrix/dist_coeff_1.npy")
-camera_matrix_2 = np.load("matrix/camera_matrix_2.npy")
-dist_coeff_2 = np.load("matrix/dist_coeff_2.npy")
+camera_matrix_1 = np.load(f"matrix/camera_matrix_{id_1}.npy")
+dist_coeff_1 = np.load(f"matrix/dist_coeff_{id_1}.npy")
+camera_matrix_2 = np.load(f"matrix/camera_matrix_{id_2}.npy")
+dist_coeff_2 = np.load(f"matrix/dist_coeff_{id_2}.npy")
 
 print("camera_matrix_1:\n",camera_matrix_1)
 print("dist_coeff_1:\n",dist_coeff_1)
 print("camera_matrix_2:\n",camera_matrix_2)
 print("dist_coeff_2:\n",dist_coeff_2)
 
-image1_paths = glob('image/color_*_1.png')
-image2_paths = glob('image/color_*_2.png')
+image1_paths = glob(f'image/color_*_{id_1}.png')
+image2_paths = glob(f'image/color_*_{id_2}.png')
 
 for image1_path, image2_path in zip(image1_paths, image2_paths):
     image1 = cv2.imread(image1_path)

@@ -36,6 +36,12 @@ def get_transformation_matrix(R, Tr):
     
     return transformation_matrix
 
+def all_icp(pcd1,pcd2,pcd3):
+    pcd1,pcd2 = execute_icp(pcd1,pcd2)
+    pcd_1_2 = pcd1 + pcd2
+    pcd_1_2,pcd3 = execute_icp(pcd_1_2,pcd3)
+    pcd_1_2_3 = pcd_1_2 + pcd3
+    return pcd_1_2_3
 
 def execute_icp(source, target):
     print("Apply initial alignment")
@@ -64,35 +70,53 @@ def remove_outliers(pcd, nb_neighbors=100, std_ratio=2.0, radius=0.05, min_nb_po
         nb_points=min_nb_points, radius=radius)
     return pcd
 
-def process_outliers(pcd_r, pcd_l):
+def process_outliers(pcd_1, pcd_2,pcd_3):
     print("Processing the reference point cloud...")
-    pcd_r_processed = remove_outliers(pcd_r)
+    pcd_1_processed = remove_outliers(pcd_1)
     print("Processing the point cloud to transform...")
-    pcd_l_processed = remove_outliers(pcd_l)
-    return pcd_r_processed, pcd_l_processed
+    pcd_2_processed = remove_outliers(pcd_2)
+    print("Processing the point cloud to transform...")
+    pcd_3_processed = remove_outliers(pcd_3)
+    return pcd_1_processed, pcd_2_processed, pcd_3_processed
 
-depth_intrinsics_1 = np.load('matrix/depth_intrinsics_1.npy')
-depth_image_path_1 = sorted(glob('image/depth_*_1.png'))[0]
-color_image_path_1 = sorted(glob('image/color_*_1.png'))[0]
+depth_intrinsics_1 = np.load('matrix/depth_intrinsics_eto.npy')
+depth_image_path_1 = sorted(glob('image/depth_*_eto.png'))[0]
+color_image_path_1 = sorted(glob('image/color_*_eto.png'))[0]
 
-depth_intrinsics_2 = np.load('matrix/depth_intrinsics_2.npy')
-depth_image_path_2 = sorted(glob('image/depth_*_2.png'))[0]
-color_image_path_2 = sorted(glob('image/color_*_2.png'))[0]
+depth_intrinsics_2 = np.load('matrix/depth_intrinsics_1.npy')
+depth_image_path_2 = sorted(glob('image/depth_*_1.png'))[0]
+color_image_path_2 = sorted(glob('image/color_*_1.png'))[0]
+
+depth_intrinsics_3 = np.load('matrix/depth_intrinsics_2.npy')
+depth_image_path_3 = sorted(glob('image/depth_*_2.png'))[0]
+color_image_path_3 = sorted(glob('image/color_*_2.png'))[0]
+
 
 pcd_1 = create_point_cloud(depth_image_path_1, color_image_path_1, depth_intrinsics_1)
 pcd_2 = create_point_cloud(depth_image_path_2, color_image_path_2, depth_intrinsics_2)
+pcd_3 = create_point_cloud(depth_image_path_3, color_image_path_3, depth_intrinsics_3)
 
-R = np.load('matrix/R.npy') 
-T = np.load('matrix/T.npy')
+R_eto_1 = np.load('matrix/R_eto_1.npy') 
+T_eto_1 = np.load('matrix/T_eto_1.npy')
 
-transformation_matrix = get_transformation_matrix(R, T)
+R_1_2 = np.load('matrix/R_1_2.npy')
+T_1_2 = np.load('matrix/T_1_2.npy')
 
-pcd_1.transform(transformation_matrix)
 
-pcd_1,pcd_2 = process_outliers(pcd_1,pcd_2)
+transformation_matrix_1_2 = get_transformation_matrix(R_1_2, T_1_2)
+transformation_matrix_eto_1 = get_transformation_matrix(R_eto_1, T_eto_1)
 
-# pcd_1,pcd_2 = execute_icp(pcd_1,pcd_2)
+pcd_1.transform(transformation_matrix_eto_1)
+pcd_1.transform(transformation_matrix_1_2)
+pcd_2.transform(transformation_matrix_1_2)
 
-o3d.visualization.draw_geometries([pcd_1]+[pcd_2])
 
+pcd_1,pcd_2,pcd_3 = process_outliers(pcd_1,pcd_2,pcd_3)
+
+pcd_1.paint_uniform_color([1, 1, 0])
+pcd_2.paint_uniform_color([1, 0, 1])
+pcd_3.paint_uniform_color([0, 1, 1])
+
+pcd_1_2_3 = all_icp(pcd_1,pcd_2,pcd_3)
+o3d.visualization.draw_geometries([pcd_1_2_3])
 

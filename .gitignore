@@ -1,4 +1,2 @@
-# image/
-# *.npy
-# *.npz
-# *.pdf
+*.png
+*.npy
