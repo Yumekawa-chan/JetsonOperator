@@ -113,10 +113,7 @@ pcd_2.transform(transformation_matrix_1_2)
 
 pcd_1,pcd_2,pcd_3 = process_outliers(pcd_1,pcd_2,pcd_3)
 
-pcd_1.paint_uniform_color([1, 1, 0])
-pcd_2.paint_uniform_color([1, 0, 1])
-pcd_3.paint_uniform_color([0, 1, 1])
-
-pcd_1_2_3 = all_icp(pcd_1,pcd_2,pcd_3)
+# pcd_1_2_3 = all_icp(pcd_1,pcd_2,pcd_3)
+pcd_1_2_3 = pcd_1 + pcd_2 + pcd_3
 o3d.visualization.draw_geometries([pcd_1_2_3])
 
