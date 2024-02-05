@@ -1,14 +1,25 @@
 import numpy as np
 import open3d as o3d
 from glob import glob
-from utils.img2pcd import create_point_cloud, get_transformation_matrix
+from utils.img2pcd import create_point_cloud_from_mask, get_transformation_matrix
 from utils.pcd_process import process_outliers
+from utils.mask_maker import make_mask
+import os
 
 def load_intrinsics_and_image_paths(camera_id):
     intrinsics_path = f'matrix/depth_intrinsics_{camera_id}.npy'
-    depth_image_path = sorted(glob(f'image/depth_*_{camera_id}.npy'))[0]
-    color_image_path = sorted(glob(f'image/color_*_{camera_id}.png'))[0]
-    return np.load(intrinsics_path), depth_image_path, color_image_path
+    depth_image_paths = sorted(glob(f'image/depth_*_{camera_id}.npy'))
+    color_image_paths = sorted(glob(f'image/color_*_{camera_id}.png'))
+
+    make_mask(os.path.abspath(f"./image_base/average_image_{camera_id}.png"), 
+              os.path.abspath(color_image_paths[0]), camera_id)
+    
+    mask_image_paths = glob(f'./mask/mask_{camera_id}.png')
+
+    return (os.path.abspath(depth_image_paths[0]), 
+            os.path.abspath(color_image_paths[0]),
+            np.load(os.path.abspath(intrinsics_path)), 
+            os.path.abspath(mask_image_paths[0]))
 
 def load_transformation_matrices(rotation_id, translation_id):
     R = np.load(f'matrix/R_{rotation_id}.npy')
@@ -21,8 +32,13 @@ def apply_transformation(pcd_list, transformation_matrix):
 
 def main():
     intrinsics_and_paths = {i: load_intrinsics_and_image_paths(i) for i in range(1, 5)}
+    print(intrinsics_and_paths[2])
 
-    pcds = {i: create_point_cloud(*intrinsics_and_paths[i]) for i in range(1, 5)}
+    pcds = {}
+    for i in range(1, 5):
+        pcds[i] = create_point_cloud_from_mask(*intrinsics_and_paths[i])
+        print(f"Camera {i}: Point cloud has {len(pcds[i].points)} points.")
+        print("-----------------------------------")
 
     transformation_matrices = {
         '4_3': load_transformation_matrices('4_3', '4_3'),
@@ -38,6 +54,7 @@ def main():
     processed_pcd = process_outliers(combined_pcd)
 
     o3d.visualization.draw_geometries([processed_pcd])
+    o3d.io.write_point_cloud("combined_pcd.ply", processed_pcd)
 
 if __name__ == '__main__':
     main()

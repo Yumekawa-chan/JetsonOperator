@@ -19,12 +19,15 @@ def execute_icp(source, target):
     source.transform(transformation_icp)
     return source, target
 
-def remove_outliers(pcd, nb_neighbors=100, std_ratio=2.0, radius=0.05, min_nb_points=5):
-    pcd, ind = pcd.remove_statistical_outlier(
+def remove_outliers(pcd, nb_neighbors=32, std_ratio=2.0, radius=0.05, min_nb_points=20):
+    pcd_statistical_filtered, _ = pcd.remove_statistical_outlier(
         nb_neighbors=nb_neighbors, std_ratio=std_ratio)
-    pcd, ind = pcd.remove_radius_outlier(
+
+    pcd_radius_filtered, _ = pcd_statistical_filtered.remove_radius_outlier(
         nb_points=min_nb_points, radius=radius)
-    return pcd
+
+    return pcd_radius_filtered
+
 
 def process_outliers(pcd):
     pcd_processed = remove_outliers(pcd)

@@ -12,26 +12,31 @@ def get_transformation_matrix(R, Tr):
     
     return transformation_matrix
 
-def create_point_cloud(depth_image_path, color_image_path, intrinsics):
-    depth_image = np.load(depth_image_path)
-    depth_image = depth_image.astype(np.uint16)
+def create_point_cloud_from_mask(depth_image_path, color_image_path, intrinsics, mask_image_path):
+    print("depth_image_path:", depth_image_path)
+    print("color_image_path:", color_image_path)
+    print("mask_image_path:", mask_image_path)
+
+    depth_image = np.load(depth_image_path).astype(np.float32)
     color_image = cv2.imread(color_image_path, cv2.IMREAD_COLOR)
-    color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
+    mask_image = cv2.imread(mask_image_path, cv2.IMREAD_GRAYSCALE)
 
     fx, fy, cx, cy, *_ = intrinsics
 
-    depth_o3d = o3d.geometry.Image(depth_image)
-    color_o3d = o3d.geometry.Image(color_image)
-    intrinsics_o3d = o3d.camera.PinholeCameraIntrinsic(
-        depth_image.shape[1], depth_image.shape[0], fx, fy, cx, cy
-    )
+    rows, cols = depth_image.shape
+    c, r = np.meshgrid(np.arange(cols), np.arange(rows), sparse=True)
+    valid = (depth_image > 0) & (mask_image == 255)
+    z = np.where(valid, depth_image / 1000.0, 0)
+    x = np.where(valid, z * (c - cx) / fx, 0)
+    y = np.where(valid, z * (r - cy) / fy, 0)
 
-    rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
-        color_o3d, depth_o3d, depth_scale=1000.0, depth_trunc=8.0, convert_rgb_to_intensity=False
-    )
+    points = np.dstack((x, y, z))
+    colors = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB) / 255.0
+    points = points[valid]
+    colors = colors[valid]
 
-    pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
-        rgbd_image, intrinsics_o3d
-    )
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points)
+    pcd.colors = o3d.utility.Vector3dVector(colors)
 
     return pcd
