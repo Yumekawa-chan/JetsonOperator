@@ -1,33 +1,26 @@
+import cv2
+from ultralytics import YOLO
+import torch
 from PIL import Image
-import numpy as np
-from scipy.ndimage import gaussian_filter
-from skimage.morphology import opening,closing, disk
-from skimage.filters import threshold_otsu
 
-def make_mask(base_image_path, input_image_path, id):
-    base_image = Image.open(base_image_path).convert('L')
-    input_image = Image.open(input_image_path).convert('L')
+model = YOLO('yolov8m-seg.pt')
 
-    blur_sigma = 2
-    opening_size = 1
-    closing_size = 1
+def make_mask(input_image_path, id):
+    img = cv2.imread(input_image_path)
+    results = model.predict(source=img, save=False, save_txt=False, stream=True,imgsz=[1280,720])
+    all_masks_combined = None
 
-    base_array = np.array(base_image)
-    input_array = np.array(input_image)
+    for result in results:
+        masks = result.masks.data
+        if all_masks_combined is None:
+            all_masks_combined = masks.any(dim=0)
+        else:
+            all_masks_combined = torch.logical_or(all_masks_combined, masks.any(dim=0))
 
-    base_array_blurred = gaussian_filter(base_array, sigma=blur_sigma)
-    input_array_blurred = gaussian_filter(input_array, sigma=blur_sigma)
+    all_masks_combined = (all_masks_combined.int() * 255).cpu().numpy()
 
-    diff_array = np.abs(base_array_blurred - input_array_blurred)
+    cv2.imwrite(f'./mask/mask_{id}.png', all_masks_combined)
+    img = Image.open(f'./mask/mask_{id}.png')
+    img_resized = img.resize((1280, 720))
+    img_resized.save(f'./mask/mask_{id}.png')
 
-    threshold = threshold_otsu(diff_array)
-    threshold = 40
-
-    mask_array = np.where(diff_array > threshold, 255, 0).astype(np.uint8)
-
-    selem = disk(opening_size)
-    mask_cleaned = opening(mask_array, selem)
-    mask_cleaned = closing(mask_cleaned, disk(closing_size))
-
-    mask_image = Image.fromarray(mask_cleaned)
-    mask_image.save(f'./mask/mask_{id}.png')
